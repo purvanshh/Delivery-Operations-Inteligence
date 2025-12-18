@@ -3,7 +3,7 @@
 > A frontend-heavy operations intelligence platform that helps restaurant teams identify, prioritize, and resolve costly delivery issues using AI-driven insights.
 
 <p align="center">
-  <img src="assets/dashboard.png" alt="Dashboard" width="100%" />
+  <img src="assets/screencapture-localhost-5173-2025-12-18-22_46_47.png" alt="Dashboard" width="100%" />
 </p>
 
 ## Problem
@@ -171,6 +171,16 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 - ✅ ARIA labels on action buttons
 - ✅ Status badges use color + text (not color-only)
 - ✅ Escape key returns to dashboard from issue detail
+
+---
+
+## Screenshots
+
+### Dashboard
+![Dashboard](assets/screencapture-localhost-5173-2025-12-18-22_46_47.png)
+
+### Issue Deep Dive
+![Issue Detail](assets/screencapture-localhost-5173-issues-ORD-10024-2025-12-18-22_47_11.png)
 
 ---
 

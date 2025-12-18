@@ -174,16 +174,6 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## Screenshots
-
-### Dashboard
-![Dashboard](assets/dashboard.png)
-
-### Issue Deep Dive
-![Issue Detail](assets/issue-detail.png)
-
----
-
 ## License
 
 Apache License 2.0

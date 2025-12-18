@@ -104,6 +104,40 @@ def generate_mock_data():
         # AI flags more issues for attention
         ai_flag = random.random() < 0.7
         
+        # Calculate recovered amount based on status and action
+        recovered_amount = 0.0
+        action_taken = None
+        
+        # Generate resolution history for non-open issues
+        if status in ["action_taken", "resolved"]:
+            action_options = ["file_chargeback", "dismiss", "escalate"]
+            action_taken = random.choice(action_options)
+            
+            # Set recovered amount based on action
+            if action_taken == "file_chargeback" and status == "resolved":
+                # Successful chargeback: recover 85-100% of estimated cost
+                recovered_amount = round(estimated_cost * random.uniform(0.85, 1.0), 2)
+            elif action_taken == "escalate":
+                # Escalated: pending recovery (stays 0)
+                recovered_amount = 0.0
+            else:
+                # Dismissed: no recovery
+                recovered_amount = 0.0
+            
+            outcome_map = {
+                "file_chargeback": "recovered",
+                "dismiss": "ignored",
+                "escalate": "escalated",
+            }
+            
+            resolution = ResolutionAction(
+                order_id=order_id,
+                action_taken=action_taken,
+                taken_at=detected_at + timedelta(hours=random.randint(2, 72)),
+                outcome=outcome_map[action_taken],
+            )
+            resolutions[order_id] = [resolution]
+        
         issue = OrderIssue(
             order_id=order_id,
             store_id=store.store_id,
@@ -113,6 +147,7 @@ def generate_mock_data():
             estimated_cost=estimated_cost,
             status=status,
             ai_flag=ai_flag,
+            recovered_amount=recovered_amount,
         )
         issues.append(issue)
         
@@ -129,25 +164,6 @@ def generate_mock_data():
                 expected_recovery=round(estimated_cost * recovery_rate, 2),
             )
             insights[order_id] = insight
-        
-        # Generate resolution history for non-open issues
-        if status in ["action_taken", "resolved"]:
-            action_options = ["file_chargeback", "dismiss", "escalate"]
-            action = random.choice(action_options)
-            
-            outcome_map = {
-                "file_chargeback": "recovered",
-                "dismiss": "ignored",
-                "escalate": "escalated",
-            }
-            
-            resolution = ResolutionAction(
-                order_id=order_id,
-                action_taken=action,
-                taken_at=detected_at + timedelta(hours=random.randint(2, 72)),
-                outcome=outcome_map[action],
-            )
-            resolutions[order_id] = [resolution]
     
     return {
         "stores": STORES,
@@ -196,6 +212,19 @@ def update_issue_status(order_id: str, new_status: str) -> Optional[OrderIssue]:
     for i, issue in enumerate(MOCK_DATA["issues"]):
         if issue.order_id == order_id:
             updated = issue.model_copy(update={"status": new_status})
+            MOCK_DATA["issues"][i] = updated
+            return updated
+    return None
+
+
+def update_issue_with_recovery(order_id: str, new_status: str, recovered_amount: float) -> Optional[OrderIssue]:
+    """Update issue status and recovered amount, return the updated issue."""
+    for i, issue in enumerate(MOCK_DATA["issues"]):
+        if issue.order_id == order_id:
+            updated = issue.model_copy(update={
+                "status": new_status,
+                "recovered_amount": recovered_amount
+            })
             MOCK_DATA["issues"][i] = updated
             return updated
     return None

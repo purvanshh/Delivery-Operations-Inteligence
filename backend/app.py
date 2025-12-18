@@ -19,6 +19,8 @@ from models import (
     FiltersResponse,
     ResolutionAction,
 )
+import random
+
 from mock_data import (
     get_all_issues,
     get_issue,
@@ -27,6 +29,7 @@ from mock_data import (
     get_insight,
     get_resolutions,
     update_issue_status,
+    update_issue_with_recovery,
     add_resolution,
     generate_insight,
     DELIVERY_PARTNERS,
@@ -108,6 +111,12 @@ def get_dashboard(
     chargebacks_filed = len(actioned_issues)
     chargebacks_recovered = len(resolved_issues)
     
+    # Calculate recovered revenue metrics
+    total_recovered = sum(i.recovered_amount for i in all_issues)
+    total_at_risk_ever = sum(i.estimated_cost for i in all_issues)
+    recovery_rate = round((total_recovered / total_at_risk_ever * 100), 1) if total_at_risk_ever > 0 else 0
+    pending_recovery = sum(i.estimated_cost for i in all_issues if i.status == "action_taken")
+    
     # Average resolution time (mock: 12-36 hours)
     avg_resolution_hours = 18.5
     
@@ -117,6 +126,9 @@ def get_dashboard(
         chargebacks_filed=chargebacks_filed,
         chargebacks_recovered=chargebacks_recovered,
         avg_resolution_hours=avg_resolution_hours,
+        total_recovered=round(total_recovered, 2),
+        recovery_rate=recovery_rate,
+        pending_recovery=round(pending_recovery, 2),
     )
     
     # Paginate
@@ -136,6 +148,7 @@ def get_dashboard(
         kpis=kpis,
         issues=paginated_issues,
         pagination=pagination,
+        last_updated=datetime.now(),
     )
 
 
@@ -194,11 +207,15 @@ def take_action(order_id: str, request: ActionRequest):
     """
     Take an action on an order issue.
     
-    Updates issue status and creates a resolution record.
+    Updates issue status, calculates recovered amount, and creates a resolution record.
     """
     issue = get_issue(order_id)
     if not issue:
         raise HTTPException(status_code=404, detail=f"Issue {order_id} not found")
+    
+    # Get AI insight for expected recovery calculation
+    insight = get_insight(order_id)
+    expected_recovery = insight.expected_recovery if insight else issue.estimated_cost * 0.85
     
     # Map action to outcome
     outcome_map = {
@@ -207,8 +224,17 @@ def take_action(order_id: str, request: ActionRequest):
         "escalate": "escalated",
     }
     
-    # Determine new status
-    new_status = "resolved" if request.action == "file_chargeback" else "action_taken"
+    # Determine new status and recovered amount based on action
+    if request.action == "file_chargeback":
+        new_status = "resolved"
+        # Simulate realistic recovery: 85-100% of expected recovery
+        recovered_amount = round(expected_recovery * random.uniform(0.85, 1.0), 2)
+    elif request.action == "dismiss":
+        new_status = "action_taken"
+        recovered_amount = 0.0
+    else:  # escalate
+        new_status = "action_taken"
+        recovered_amount = 0.0  # Pending recovery
     
     # Create resolution record
     resolution = ResolutionAction(
@@ -218,22 +244,24 @@ def take_action(order_id: str, request: ActionRequest):
         outcome=outcome_map[request.action],
     )
     
-    # Update data
+    # Update data with recovered amount
     add_resolution(resolution)
-    updated_issue = update_issue_status(order_id, new_status)
+    updated_issue = update_issue_with_recovery(order_id, new_status, recovered_amount)
     
     if not updated_issue:
         raise HTTPException(status_code=500, detail="Failed to update issue")
     
-    action_messages = {
-        "file_chargeback": f"Chargeback filed for {order_id}. Expected recovery: ${issue.estimated_cost:.2f}",
-        "dismiss": f"Issue {order_id} dismissed. No further action required.",
-        "escalate": f"Issue {order_id} escalated to account manager for review.",
-    }
+    # Build action-specific success messages
+    if request.action == "file_chargeback":
+        message = f"Chargeback filed for {order_id}. Recovered: ${recovered_amount:.2f}"
+    elif request.action == "dismiss":
+        message = f"Issue {order_id} dismissed. No recovery attempted."
+    else:
+        message = f"Issue {order_id} escalated to account manager. Recovery pending."
     
     return ActionResponse(
         success=True,
-        message=action_messages[request.action],
+        message=message,
         updated_issue=updated_issue,
         resolution=resolution,
     )

@@ -26,30 +26,59 @@ This platform provides restaurant operators with a **single pane of glass** to:
 3. **Analyze** — Root cause analysis with confidence scores
 4. **Resolve** — One-click actions to file chargebacks, dismiss, or escalate
 
-## Core Workflow
+---
 
-```
-Issue Detected → AI Analysis → Human Decision → Action Taken → Revenue Recovered
+## How It Works
+
+```mermaid
+flowchart LR
+    A[🔍 Detect] --> B[💰 Estimate]
+    B --> C[🤖 Analyze]
+    C --> D[👤 Decide]
+    D --> E[📊 Recover]
 ```
 
-### Dashboard View
-- Track orders with issues (%), revenue at risk, chargeback recovery rate
-- Filter by store, delivery partner, issue type, status
-- Click any issue to deep dive
+| Step | What Happens |
+|------|--------------|
+| **1. Detect** | Identify delivery issues across all partners in real-time |
+| **2. Estimate** | Calculate financial impact per order automatically |
+| **3. Analyze** | Generate AI-powered root cause insights with confidence scores |
+| **4. Decide** | Enable human decision-making: file chargeback, dismiss, or escalate |
+| **5. Recover** | Track recovered revenue and resolution outcomes |
+
+---
+
+## Key Features
+
+### Dashboard
+- **5 KPI Cards**: Issues %, Revenue at Risk, Total Recovered, Chargebacks, Avg Resolution Time
+- **Dynamic Filters**: Store, delivery partner, issue type, status
+- **Recovered Amount Column**: See money recovered per order at a glance
+- **Real-time Updates**: KPIs refresh after every action
 
 ### Issue Deep Dive
-- Order metadata and financial impact
-- AI-generated root cause and recommended action
-- Take action: File Chargeback, Dismiss, or Escalate
-- Changes sync back to dashboard instantly
+- **Order Metadata**: Store, partner, detection time
+- **Financial Impact**: Estimated cost, expected recovery, actual recovered amount
+- **AI Insight Panel**: Root cause, confidence score, recommended action
+- **One-Click Actions**: File chargeback, dismiss, or escalate
+
+### Recovery Tracking
+- **Resolved**: Shows actual $ recovered (green)
+- **Pending**: Escalated issues awaiting resolution (amber "Pending" badge)
+- **Dismissed**: No recovery attempted (gray)
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React, TypeScript, Tailwind CSS |
-| Backend | Python, FastAPI |
+| Frontend | React 18, TypeScript, Tailwind CSS, Framer Motion |
+| Backend | Python 3.10+, FastAPI |
+| Animations | Framer Motion (subtle, purposeful) |
 | Data | Mock data simulating real operations |
+
+---
 
 ## Getting Started
 
@@ -86,6 +115,8 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+---
+
 ## API Endpoints
 
 | Endpoint | Method | Description |
@@ -93,29 +124,55 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `/dashboard` | GET | KPIs + paginated issues list |
 | `/issues/{order_id}` | GET | Issue details + AI insight |
 | `/issues/{order_id}/analyze` | POST | Generate AI insight |
-| `/issues/{order_id}/action` | POST | Take action on issue |
+| `/issues/{order_id}/action` | POST | Take action (file_chargeback, dismiss, escalate) |
 | `/filters` | GET | Available filter options |
+
+### KPI Response Fields
+
+| Field | Description |
+|-------|-------------|
+| `issues_percentage` | % of total orders with issues |
+| `revenue_at_risk` | Total $ pending resolution |
+| `total_recovered` | Total $ recovered via chargebacks |
+| `recovery_rate` | % of at-risk revenue recovered |
+| `pending_recovery` | $ in escalated issues (pending) |
+
+---
 
 ## Project Structure
 
 ```
 ├── backend/
-│   ├── app.py          # FastAPI application
-│   ├── models.py       # Pydantic data models
-│   └── mock_data.py    # Realistic mock data generator
+│   ├── app.py           # FastAPI application
+│   ├── models.py        # Pydantic data models
+│   └── mock_data.py     # Realistic mock data generator
 ├── src/
 │   ├── pages/
-│   │   ├── Dashboard.tsx      # Main dashboard screen
-│   │   └── IssueDetail.tsx    # Issue deep dive screen
+│   │   ├── Dashboard.tsx       # Main dashboard screen
+│   │   └── IssueDetail.tsx     # Issue deep dive screen
 │   ├── components/
-│   │   ├── KPICard.tsx        # Metric display cards
-│   │   ├── IssuesTable.tsx    # Clickable issues table
-│   │   ├── FilterBar.tsx      # Filter dropdowns
-│   │   └── StatusBadge.tsx    # Status indicators
-│   ├── api.ts          # API service layer
-│   └── types.ts        # TypeScript definitions
+│   │   ├── KPICard.tsx         # Animated metric cards
+│   │   ├── IssuesTable.tsx     # Clickable issues table
+│   │   ├── FilterBar.tsx       # Filter dropdowns + chips
+│   │   ├── StatusBadge.tsx     # Status indicators
+│   │   ├── EmptyState.tsx      # Empty/error states
+│   │   └── Pagination.tsx      # Page navigation
+│   ├── api.ts           # API service layer
+│   └── types.ts         # TypeScript definitions
 └── README.md
 ```
+
+---
+
+## Accessibility
+
+- ✅ Keyboard navigation for table rows (Tab + Enter)
+- ✅ Focus states on all interactive elements
+- ✅ ARIA labels on action buttons
+- ✅ Status badges use color + text (not color-only)
+- ✅ Escape key returns to dashboard from issue detail
+
+---
 
 ## Screenshots
 

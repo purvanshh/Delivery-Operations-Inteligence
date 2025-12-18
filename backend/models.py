@@ -18,6 +18,7 @@ class OrderIssue(BaseModel):
     estimated_cost: float
     status: Literal["open", "reviewed", "action_taken", "resolved"]
     ai_flag: bool
+    recovered_amount: float = 0
 
 
 class AIInsight(BaseModel):
@@ -42,6 +43,9 @@ class DashboardKPIs(BaseModel):
     chargebacks_filed: int
     chargebacks_recovered: int
     avg_resolution_hours: float
+    total_recovered: float
+    recovery_rate: float
+    pending_recovery: float
 
 
 class PaginationInfo(BaseModel):
@@ -54,6 +58,7 @@ class DashboardResponse(BaseModel):
     kpis: DashboardKPIs
     issues: list[OrderIssue]
     pagination: PaginationInfo
+    last_updated: datetime
 
 
 class IssueDetailResponse(BaseModel):

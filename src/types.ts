@@ -21,6 +21,7 @@ export interface OrderIssue {
   estimated_cost: number;
   status: IssueStatus;
   ai_flag: boolean;
+  recovered_amount: number;
 }
 
 export interface AIInsight {
@@ -45,6 +46,9 @@ export interface DashboardKPIs {
   chargebacks_filed: number;
   chargebacks_recovered: number;
   avg_resolution_hours: number;
+  total_recovered: number;
+  recovery_rate: number;
+  pending_recovery: number;
 }
 
 export interface PaginationInfo {
@@ -57,6 +61,7 @@ export interface DashboardResponse {
   kpis: DashboardKPIs;
   issues: OrderIssue[];
   pagination: PaginationInfo;
+  last_updated: string;
 }
 
 export interface IssueDetailResponse {
